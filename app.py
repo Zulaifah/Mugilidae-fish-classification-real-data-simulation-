@@ -263,104 +263,196 @@ if models is not None:
     st.pyplot(fig)
 
     # ===============================
-    # EFFECT OF NOISE LEVEL ON ACCURACY
+    # EFFECT OF NOISE LEVEL ON ACCURACY (BALANCED MODE ONLY)
     # ===============================
     
-    st.header("📊 Effect of Noise Level on Model Accuracy")
-    st.markdown("This analysis shows how different levels of measurement noise affect model performance.")
+    if data_mode == "⚖️ Balanced Data (200 per species)":
+        st.header("📊 Effect of Noise Level on Model Accuracy")
+        st.markdown("This analysis shows how different levels of measurement noise affect model performance on balanced data.")
+        
+        # Data from experiments (GWO results)
+        noise_levels = [0, 5, 10, 15]
+        gwo_acc_noise = [77.5, 76.0, 73.5, 70.0]
+        ann_acc_noise = [76.5, 75.0, 72.5, 69.0]
+        pso_acc_noise = [74.5, 73.0, 70.0, 66.5]
+        ga_acc_noise = [71.0, 69.5, 66.5, 63.0]
+        
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(noise_levels, gwo_acc_noise, 'o-', linewidth=2, markersize=8, 
+                label='GWO', color='#3498db', markeredgecolor='black', markeredgewidth=1)
+        ax.plot(noise_levels, ann_acc_noise, 's-', linewidth=2, markersize=8, 
+                label='ANN', color='#95a5a6', markeredgecolor='black', markeredgewidth=1)
+        ax.plot(noise_levels, pso_acc_noise, '^-', linewidth=2, markersize=8, 
+                label='PSO', color='#e74c3c', markeredgecolor='black', markeredgewidth=1)
+        ax.plot(noise_levels, ga_acc_noise, 'd-', linewidth=2, markersize=8, 
+                label='GA', color='#2ecc71', markeredgecolor='black', markeredgewidth=1)
+        
+        ax.set_xlabel('Noise Level (%)', fontsize=12)
+        ax.set_ylabel('Test Accuracy (%)', fontsize=12)
+        ax.set_title('Effect of Noise Level on Model Accuracy (Balanced Data)', fontsize=14, fontweight='bold')
+        ax.set_xticks(noise_levels)
+        ax.set_ylim(55, 85)
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='lower left', fontsize=10)
+        
+        # Add annotations for GWO points
+        for x, y in zip(noise_levels, gwo_acc_noise):
+            ax.annotate(f'{y}%', xy=(x, y), xytext=(5, 5), 
+                       textcoords='offset points', fontsize=9, fontweight='bold', color='#3498db')
+        
+        plt.tight_layout()
+        st.pyplot(fig)
+        
+        st.caption("📌 **Observation:** GWO maintains the highest accuracy across all noise levels, demonstrating superior robustness to measurement errors.")
+        
+        # ===============================
+        # EFFECT OF TARGET SAMPLES ON ACCURACY (BALANCED MODE ONLY)
+        # ===============================
+        
+        st.header("📊 Effect of Target Samples on GWO Accuracy")
+        st.markdown("This analysis shows how increasing the number of samples per species affects model performance on balanced data.")
+        
+        # Data from experiments
+        samples_per_species = [50, 100, 150, 200, 250, 300]
+        gwo_accuracy = [68.5, 73.0, 75.5, 77.5, 77.8, 78.0]
+        improvement = [0, 4.5, 2.5, 2.0, 0.3, 0.2]
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+        
+        # Plot 1: Accuracy vs Samples
+        ax1.plot(samples_per_species, gwo_accuracy, 'o-', linewidth=2.5, markersize=8, 
+                 color='#3498db', markeredgecolor='black', markeredgewidth=1.5)
+        ax1.fill_between(samples_per_species, gwo_accuracy, alpha=0.2, color='#3498db')
+        ax1.set_xlabel('Samples per Species', fontsize=12)
+        ax1.set_ylabel('Test Accuracy (%)', fontsize=12)
+        ax1.set_title('GWO Accuracy vs Training Sample Size', fontsize=12, fontweight='bold')
+        ax1.set_xticks(samples_per_species)
+        ax1.set_ylim(65, 85)
+        ax1.grid(True, alpha=0.3, linestyle='--')
+        
+        # Add value labels
+        for x, y in zip(samples_per_species, gwo_accuracy):
+            ax1.annotate(f'{y}%', xy=(x, y), xytext=(5, 5), 
+                        textcoords='offset points', fontsize=9, fontweight='bold')
+        
+        # Highlight optimal point (200 samples)
+        ax1.axvline(x=200, color='red', linestyle='--', alpha=0.7, label='Optimal (200 samples)')
+        ax1.scatter([200], [77.5], color='red', s=150, zorder=5, marker='*')
+        ax1.legend()
+        
+        # Plot 2: Marginal Improvement
+        ax2.bar([str(s) for s in samples_per_species[1:]], improvement[1:], 
+                color='#3498db', alpha=0.7, edgecolor='black')
+        ax2.set_xlabel('Samples per Species', fontsize=12)
+        ax2.set_ylabel('Marginal Improvement (%)', fontsize=12)
+        ax2.set_title('Marginal Improvement from Additional Samples', fontsize=12, fontweight='bold')
+        ax2.grid(True, alpha=0.3, axis='y')
+        
+        # Add value labels
+        for i, (x, y) in enumerate(zip(samples_per_species[1:], improvement[1:])):
+            ax2.text(i, y + 0.2, f'+{y}%', ha='center', va='bottom', fontweight='bold', fontsize=10)
+        
+        # Add annotation for diminishing returns
+        ax2.annotate('Diminishing returns beyond 200 samples', 
+                    xy=(3, 2.2), xytext=(1.5, 4),
+                    arrowprops=dict(arrowstyle='->', color='red'),
+                    fontsize=9, color='red')
+        
+        plt.tight_layout()
+        st.pyplot(fig)
+        
+        st.caption("📌 **Observation:** Accuracy improves rapidly up to 200 samples per species (from 68.5% to 77.5%), after which gains diminish significantly (+0.5% from 200 to 300 samples).")
     
-    # Data from experiments (GWO results)
-    noise_levels = [0, 5, 10, 15]
-    gwo_acc_noise = [77.5, 76.0, 73.5, 70.0]
-    ann_acc_noise = [76.5, 75.0, 72.5, 69.0]
-    pso_acc_noise = [74.5, 73.0, 70.0, 66.5]
-    ga_acc_noise = [71.0, 69.5, 66.5, 63.0]
+    # ===============================
+    # REAL DATA VS AUGMENTED DATA COMPARISON (4.5.1)
+    # ===============================
     
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(noise_levels, gwo_acc_noise, 'o-', linewidth=2, markersize=8, 
-            label='GWO', color='#3498db', markeredgecolor='black', markeredgewidth=1)
-    ax.plot(noise_levels, ann_acc_noise, 's-', linewidth=2, markersize=8, 
-            label='ANN', color='#95a5a6', markeredgecolor='black', markeredgewidth=1)
-    ax.plot(noise_levels, pso_acc_noise, '^-', linewidth=2, markersize=8, 
-            label='PSO', color='#e74c3c', markeredgecolor='black', markeredgewidth=1)
-    ax.plot(noise_levels, ga_acc_noise, 'd-', linewidth=2, markersize=8, 
-            label='GA', color='#2ecc71', markeredgecolor='black', markeredgewidth=1)
+    st.header("📊 Comparative Analysis: Real Data vs Augmented Data")
+    st.markdown("This comparison shows how data augmentation improved model performance across all optimizers.")
     
-    ax.set_xlabel('Noise Level (%)', fontsize=12)
-    ax.set_ylabel('Test Accuracy (%)', fontsize=12)
-    ax.set_title('Effect of Noise Level on Model Accuracy', fontsize=14, fontweight='bold')
-    ax.set_xticks(noise_levels)
-    ax.set_ylim(55, 85)
-    ax.grid(True, alpha=0.3, linestyle='--')
-    ax.legend(loc='lower left', fontsize=10)
+    # Data for comparison
+    models_comp = ['ANN', 'PSO', 'GA', 'GWO']
+    real_acc = [64.3, 62.5, 61.0, 65.2]
+    augmented_acc = [76.5, 74.5, 71.0, 77.5]
+    improvement = [12.2, 12.0, 10.0, 12.3]
     
-    # Add annotations for GWO points
-    for x, y in zip(noise_levels, gwo_acc_noise):
-        ax.annotate(f'{y}%', xy=(x, y), xytext=(5, 5), 
-                   textcoords='offset points', fontsize=9, fontweight='bold', color='#3498db')
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    
+    # Plot 1: Side-by-side bar chart
+    x = np.arange(len(models_comp))
+    width = 0.35
+    
+    bars1 = axes[0].bar(x - width/2, real_acc, width, label='Real Data Only (169 specimens)', 
+                         color='#95a5a6', edgecolor='black', linewidth=1.5)
+    bars2 = axes[0].bar(x + width/2, augmented_acc, width, label='Augmented Data (200/species)', 
+                         color='#3498db', edgecolor='black', linewidth=1.5)
+    
+    axes[0].set_ylabel('Test Accuracy (%)', fontsize=12)
+    axes[0].set_xlabel('Model', fontsize=12)
+    axes[0].set_title('Accuracy Comparison: Real vs Augmented Data', fontsize=12, fontweight='bold')
+    axes[0].set_xticks(x)
+    axes[0].set_xticklabels(models_comp)
+    axes[0].legend(loc='upper left', fontsize=9)
+    axes[0].set_ylim(0, 100)
+    axes[0].grid(True, alpha=0.3, axis='y')
+    
+    # Add value labels
+    for bar, acc in zip(bars1, real_acc):
+        axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1, 
+                    f'{acc}%', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    for bar, acc in zip(bars2, augmented_acc):
+        axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1, 
+                    f'{acc}%', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    
+    # Plot 2: Improvement bar chart
+    colors = ['#95a5a6', '#e74c3c', '#2ecc71', '#3498db']
+    bars = axes[1].bar(models_comp, improvement, color=colors, edgecolor='black', linewidth=1.5)
+    axes[1].set_ylabel('Accuracy Improvement (%)', fontsize=12)
+    axes[1].set_xlabel('Model', fontsize=12)
+    axes[1].set_title('Improvement from Data Augmentation', fontsize=12, fontweight='bold')
+    axes[1].set_ylim(0, 20)
+    axes[1].grid(True, alpha=0.3, axis='y')
+    
+    for bar, imp in zip(bars, improvement):
+        axes[1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
+                    f'+{imp}%', ha='center', va='bottom', fontweight='bold', fontsize=11)
+    
+    # Plot 3: Per-species improvement for GWO
+    species_short = ['Planiliza', 'Moolgarda s', 'Osteomugil', 'Moolgarda t', 'Ellochelon']
+    real_species_acc = [62, 55, 75, 58, 70]
+    aug_species_acc = [78, 72, 84, 74, 80]
+    species_improvement = [16, 17, 9, 16, 10]
+    
+    x = np.arange(len(species_short))
+    width = 0.35
+    
+    bars1 = axes[2].bar(x - width/2, real_species_acc, width, label='Real Data Only', 
+                         color='#95a5a6', edgecolor='black', linewidth=1.5)
+    bars2 = axes[2].bar(x + width/2, aug_species_acc, width, label='Augmented Data', 
+                         color='#3498db', edgecolor='black', linewidth=1.5)
+    
+    axes[2].set_ylabel('Accuracy (%)', fontsize=12)
+    axes[2].set_xlabel('Species', fontsize=12)
+    axes[2].set_title('Per-Species Improvement (GWO Model)', fontsize=12, fontweight='bold')
+    axes[2].set_xticks(x)
+    axes[2].set_xticklabels(species_short, rotation=45, ha='right')
+    axes[2].legend(loc='upper left', fontsize=9)
+    axes[2].set_ylim(0, 100)
+    axes[2].grid(True, alpha=0.3, axis='y')
+    
+    # Add improvement annotations
+    for i, (real, aug) in enumerate(zip(real_species_acc, aug_species_acc)):
+        imp = aug - real
+        axes[2].annotate(f'+{imp}%', xy=(i, aug + 2), ha='center', fontsize=9, 
+                        fontweight='bold', color='green')
     
     plt.tight_layout()
     st.pyplot(fig)
     
-    st.caption("📌 **Observation:** GWO maintains the highest accuracy across all noise levels, demonstrating superior robustness to measurement errors.")
-    
-    # ===============================
-    # EFFECT OF TARGET SAMPLES ON ACCURACY
-    # ===============================
-    
-    st.header("📊 Effect of Target Samples on GWO Accuracy")
-    st.markdown("This analysis shows how increasing the number of samples per species affects model performance.")
-    
-    # Data from experiments
-    samples_per_species = [50, 100, 150, 200, 250, 300]
-    gwo_accuracy = [68.5, 73.0, 75.5, 77.5, 77.8, 78.0]
-    improvement = [0, 4.5, 2.5, 2.0, 0.3, 0.2]
-    
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    
-    # Plot 1: Accuracy vs Samples
-    ax1.plot(samples_per_species, gwo_accuracy, 'o-', linewidth=2.5, markersize=8, 
-             color='#3498db', markeredgecolor='black', markeredgewidth=1.5)
-    ax1.fill_between(samples_per_species, gwo_accuracy, alpha=0.2, color='#3498db')
-    ax1.set_xlabel('Samples per Species', fontsize=12)
-    ax1.set_ylabel('Test Accuracy (%)', fontsize=12)
-    ax1.set_title('GWO Accuracy vs Training Sample Size', fontsize=12, fontweight='bold')
-    ax1.set_xticks(samples_per_species)
-    ax1.set_ylim(65, 85)
-    ax1.grid(True, alpha=0.3, linestyle='--')
-    
-    # Add value labels
-    for x, y in zip(samples_per_species, gwo_accuracy):
-        ax1.annotate(f'{y}%', xy=(x, y), xytext=(5, 5), 
-                    textcoords='offset points', fontsize=9, fontweight='bold')
-    
-    # Highlight optimal point (200 samples)
-    ax1.axvline(x=200, color='red', linestyle='--', alpha=0.7, label='Optimal (200 samples)')
-    ax1.scatter([200], [77.5], color='red', s=150, zorder=5, marker='*')
-    ax1.legend()
-    
-    # Plot 2: Marginal Improvement
-    ax2.bar([str(s) for s in samples_per_species[1:]], improvement[1:], 
-            color='#3498db', alpha=0.7, edgecolor='black')
-    ax2.set_xlabel('Samples per Species', fontsize=12)
-    ax2.set_ylabel('Marginal Improvement (%)', fontsize=12)
-    ax2.set_title('Marginal Improvement from Additional Samples', fontsize=12, fontweight='bold')
-    ax2.grid(True, alpha=0.3, axis='y')
-    
-    # Add value labels
-    for i, (x, y) in enumerate(zip(samples_per_species[1:], improvement[1:])):
-        ax2.text(i, y + 0.2, f'+{y}%', ha='center', va='bottom', fontweight='bold', fontsize=10)
-    
-    # Add annotation for diminishing returns
-    ax2.annotate('Diminishing returns beyond 200 samples', 
-                xy=(3, 2.2), xytext=(1.5, 4),
-                arrowprops=dict(arrowstyle='->', color='red'),
-                fontsize=9, color='red')
-    
-    plt.tight_layout()
-    st.pyplot(fig)
-    
-    st.caption("📌 **Observation:** Accuracy improves rapidly up to 200 samples per species (from 68.5% to 77.5%), after which gains diminish significantly (+0.5% from 200 to 300 samples).")
+    st.caption("📌 **Key Findings:**")
+    st.caption("• Augmented data improved overall accuracy by an average of 11.6% across all models")
+    st.caption("• Minority species (Moolgarda tade, Moolgarda seheli) showed the greatest improvement (+16-17%)")
+    st.caption("• GWO achieved the highest accuracy in both configurations (65.2% → 77.5%)")
     
     # ===============================
     # PREDICTION SECTION
