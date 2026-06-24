@@ -1,7 +1,7 @@
 # ===============================
 # STREAMLIT APP - MUGILIDAE FISH CLASSIFIER
 # COMPLETE: REAL ONLY + BALANCED MODES
-# Models trained in Google Colab (GWO is best with 77.5%)
+# Models trained in Google Colab (ANN-GWO is best with 77.5%)
 # ===============================
 
 import streamlit as st
@@ -34,14 +34,14 @@ st.sidebar.markdown("---")
 st.sidebar.header("📋 About")
 st.sidebar.info("""
 **Comparative Study Results:**
-- 🥇 **GWO: 77.5%** (Best)
+- 🥇 **ANN-GWO: 77.5%** (Best)
 - 🥈 **ANN: 76.5%**
-- 🥉 **PSO: 74.5%**
-- **GA: 71.0%**
+- 🥉 **ANN-PSO: 74.5%**
+- **ANN-GA: 71.0%**
 
 **15 Features:** Meristic (6), Morphometric (4), Truss (5)
 
-**Best Architecture:** GWO (24,20) neurons
+**Best Architecture:** ANN-GWO (24,20) neurons
 """)
 
 st.sidebar.markdown("---")
@@ -103,9 +103,9 @@ if models is not None:
     
     # Show different best model info based on mode
     if data_mode == "⚖️ Balanced Data (200 per species)":
-        st.info("🏆 **Best Model from Balanced Training: GWO with 77.5% accuracy**")
+        st.info("🏆 **Best Model from Balanced Training: ANN-GWO with 77.5% accuracy**")
     else:
-        st.info("🏆 **Best Model from Real Data Training: GWO with ~65-70% accuracy**")
+        st.info("🏆 **Best Model from Real Data Training: ANN-GWO with ~65-70% accuracy**")
     
     # ===============================
     # MODEL PERFORMANCE TABLE
@@ -115,7 +115,7 @@ if models is not None:
     
     if data_mode == "⚖️ Balanced Data (200 per species)":
         results_data = {
-            'Method': ['ANN', 'PSO', 'GA', 'GWO 🏆'],
+            'Method': ['ANN', 'ANN-PSO', 'ANN-GA', 'ANN-GWO 🏆'],
             'Architecture': ['(10,5)', '(28,18)', '(20,18)', '(24,20)'],
             'Test Accuracy': ['76.5%', '74.5%', '71.0%', '77.5%'],
             'Accuracy': [0.765, 0.745, 0.710, 0.775],
@@ -123,7 +123,7 @@ if models is not None:
         }
     else:
         results_data = {
-            'Method': ['ANN', 'PSO', 'GA', 'GWO 🏆'],
+            'Method': ['ANN', 'ANN-PSO', 'ANN-GA', 'ANN-GWO 🏆'],
             'Architecture': ['(10,5)', '(15,8)', '(12,6)', '(18,12)'],
             'Test Accuracy': ['64.3%', '62.5%', '61.0%', '65.2%'],
             'Accuracy': [0.643, 0.625, 0.610, 0.652],
@@ -182,7 +182,7 @@ if models is not None:
         st.header("📊 Real Data vs Augmented Data Performance Comparison")
         
         # Data for comparison
-        models_comp = ['ANN', 'PSO', 'GA', 'GWO']
+        models_comp = ['ANN', 'ANN-PSO', 'ANN-GA', 'ANN-GWO']
         real_acc = [64.3, 62.5, 61.0, 65.2]
         augmented_acc = [76.5, 74.5, 71.0, 77.5]
         improvement = [12.2, 12.0, 10.0, 12.3]
@@ -258,9 +258,9 @@ if models is not None:
     per_species_df = pd.DataFrame({
         'Species': species_short,
         'ANN': [f"{s*100:.1f}%" for s in ann_scores],
-        'PSO': [f"{s*100:.1f}%" for s in pso_scores],
-        'GA': [f"{s*100:.1f}%" for s in ga_scores],
-        'GWO': [f"{s*100:.1f}%" for s in gwo_scores]
+        'ANN-PSO': [f"{s*100:.1f}%" for s in pso_scores],
+        'ANN-GA': [f"{s*100:.1f}%" for s in ga_scores],
+        'ANN-GWO': [f"{s*100:.1f}%" for s in gwo_scores]
     })
     
     st.dataframe(per_species_df, use_container_width=True)
@@ -271,9 +271,9 @@ if models is not None:
     width = 0.2
     
     ax.bar(x - width*1.5, ann_scores, width, label='ANN', color='#95a5a6', edgecolor='black')
-    ax.bar(x - width/2, pso_scores, width, label='PSO', color='#e74c3c', edgecolor='black')
-    ax.bar(x + width/2, ga_scores, width, label='GA', color='#2ecc71', edgecolor='black')
-    ax.bar(x + width*1.5, gwo_scores, width, label='GWO', color='#3498db', edgecolor='black')
+    ax.bar(x - width/2, pso_scores, width, label='ANN-PSO', color='#e74c3c', edgecolor='black')
+    ax.bar(x + width/2, ga_scores, width, label='ANN-GA', color='#2ecc71', edgecolor='black')
+    ax.bar(x + width*1.5, gwo_scores, width, label='ANN-GWO', color='#3498db', edgecolor='black')
     
     ax.set_xlabel('Species', fontsize=12)
     ax.set_ylabel('Accuracy', fontsize=12)
@@ -338,13 +338,13 @@ if models is not None:
         
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(noise_levels, gwo_acc_noise, 'o-', linewidth=2.5, markersize=9, 
-                label='GWO', color='#3498db', markeredgecolor='black', markeredgewidth=1.5)
+                label='ANN-GWO', color='#3498db', markeredgecolor='black', markeredgewidth=1.5)
         ax.plot(noise_levels, ann_acc_noise, 's-', linewidth=2, markersize=8, 
                 label='ANN', color='#95a5a6', markeredgecolor='black', markeredgewidth=1)
         ax.plot(noise_levels, pso_acc_noise, '^-', linewidth=2, markersize=8, 
-                label='PSO', color='#e74c3c', markeredgecolor='black', markeredgewidth=1)
+                label='ANN-PSO', color='#e74c3c', markeredgecolor='black', markeredgewidth=1)
         ax.plot(noise_levels, ga_acc_noise, 'd-', linewidth=2, markersize=8, 
-                label='GA', color='#2ecc71', markeredgecolor='black', markeredgewidth=1)
+                label='ANN-GA', color='#2ecc71', markeredgecolor='black', markeredgewidth=1)
         
         ax.set_xlabel('Noise Level (%)', fontsize=12)
         ax.set_ylabel('Test Accuracy (%)', fontsize=12)
@@ -361,13 +361,13 @@ if models is not None:
         plt.tight_layout()
         st.pyplot(fig)
         
-        st.caption("📌 **Observation:** GWO maintains the highest accuracy across all noise levels, demonstrating superior robustness to measurement errors.")
+        st.caption("📌 **Observation:** ANN-GWO maintains the highest accuracy across all noise levels, demonstrating superior robustness to measurement errors.")
         
         # ===============================
         # EFFECT OF TARGET SAMPLES (ONLY IN BALANCED MODE)
         # ===============================
         
-        st.header("📊 Effect of Target Samples on GWO Accuracy")
+        st.header("📊 Effect of Target Samples on ANN-GWO Accuracy")
         st.markdown("This analysis shows how increasing the number of samples per species affects model performance.")
         
         samples_per_species = [50, 100, 150, 200, 250, 300]
@@ -382,7 +382,7 @@ if models is not None:
         ax1.fill_between(samples_per_species, gwo_accuracy, alpha=0.2, color='#3498db')
         ax1.set_xlabel('Samples per Species', fontsize=12)
         ax1.set_ylabel('Test Accuracy (%)', fontsize=12)
-        ax1.set_title('GWO Accuracy vs Training Sample Size', fontsize=12, fontweight='bold')
+        ax1.set_title('ANN-GWO Accuracy vs Training Sample Size', fontsize=12, fontweight='bold')
         ax1.set_xticks(samples_per_species)
         ax1.set_ylim(65, 85)
         ax1.grid(True, alpha=0.3, linestyle='--')
@@ -431,7 +431,7 @@ if models is not None:
     # Model selection
     model_choice = st.selectbox(
         "Select Model for Prediction",
-        [f"{best_method} (Recommended - Best)", "ANN", "PSO", "GA"]
+        [f"{best_method} (Recommended - Best)", "ANN", "ANN-PSO", "ANN-GA"]
     )
     
     st.markdown("### Enter 15 Morphometric Measurements")
@@ -468,41 +468,41 @@ if models is not None:
         features_scaled = scaler.transform(features)
         
         if best_method in model_choice:
-            if best_method == "GWO 🏆":
+            if best_method == "ANN-GWO 🏆":
                 model = models['gwo']
-                model_name = "GWO"
+                model_name = "ANN-GWO"
             elif best_method == "ANN":
                 model = models['ann']
                 model_name = "ANN"
-            elif best_method == "PSO":
+            elif best_method == "ANN-PSO":
                 model = models['pso']
-                model_name = "PSO"
+                model_name = "ANN-PSO"
             else:
                 model = models['ga']
-                model_name = "GA"
+                model_name = "ANN-GA"
         elif model_choice == "ANN":
             model = models['ann']
             model_name = "ANN"
-        elif model_choice == "PSO":
+        elif model_choice == "ANN-PSO":
             model = models['pso']
-            model_name = "PSO"
+            model_name = "ANN-PSO"
         else:
             model = models['ga']
-            model_name = "GA"
+            model_name = "ANN-GA"
         
         pred = model.predict(features_scaled)[0]
         species = label_encoder.inverse_transform([pred])[0]
         proba = model.predict_proba(features_scaled)[0]
         confidence = max(proba) * 100
         
-        if model_name == "GWO":
+        if model_name == "ANN-GWO":
             model_acc = f"{best_acc*100:.1f}%"
         elif model_name == "ANN":
             model_acc = f"{results_df[results_df['Method']=='ANN']['Accuracy'].values[0]*100:.1f}%"
-        elif model_name == "PSO":
-            model_acc = f"{results_df[results_df['Method']=='PSO']['Accuracy'].values[0]*100:.1f}%"
+        elif model_name == "ANN-PSO":
+            model_acc = f"{results_df[results_df['Method']=='ANN-PSO']['Accuracy'].values[0]*100:.1f}%"
         else:
-            model_acc = f"{results_df[results_df['Method']=='GA']['Accuracy'].values[0]*100:.1f}%"
+            model_acc = f"{results_df[results_df['Method']=='ANN-GA']['Accuracy'].values[0]*100:.1f}%"
         
         st.markdown("---")
         st.success(f"### 🎯 Predicted Species: **{species}**")
@@ -528,7 +528,7 @@ if models is not None:
             st.markdown("""
             ### Key Findings (Balanced Dataset - 200 per species):
             
-            **1. Best Overall Method: GWO (77.5%)**
+            **1. Best Overall Method: ANN-GWO (77.5%)**
             - Optimal architecture: 24 → 20 neurons
             - Training time: 29.7 minutes
             
@@ -536,14 +536,14 @@ if models is not None:
             
             | Rank | Method | Accuracy | Architecture |
             |------|--------|----------|--------------|
-            | 1 | **GWO** | **77.5%** | (24,20) |
+            | 1 | **ANN-GWO** | **77.5%** | (24,20) |
             | 2 | ANN | 76.5% | (10,5) |
-            | 3 | PSO | 74.5% | (28,18) |
-            | 4 | GA | 71.0% | (20,18) |
+            | 3 | ANN-PSO | 74.5% | (28,18) |
+            | 4 | ANN-GA | 71.0% | (20,18) |
             
             **3. Effect of Noise:**
-            - GWO maintained highest accuracy across all noise levels
-            - At 5% noise: GWO 76.0%, ANN 75.0%, PSO 73.0%, GA 69.5%
+            - ANN-GWO maintained highest accuracy across all noise levels
+            - At 5% noise: ANN-GWO 76.0%, ANN 75.0%, ANN-PSO 73.0%, ANN-GA 69.5%
             
             **4. Optimal Sample Size:**
             - 200 samples per species provides optimal balance
@@ -558,7 +558,7 @@ if models is not None:
             st.markdown("""
             ### Key Findings (Real Data Only - Imbalanced):
             
-            **1. Best Overall Method: GWO (~65%)**
+            **1. Best Overall Method: ANN-GWO (~65%)**
             - Due to limited sample size (9-84 specimens per species)
             - Performance lower than balanced dataset
             
@@ -567,7 +567,7 @@ if models is not None:
             - Data augmentation effectively addresses small dataset limitation
             
             **3. Conclusion:**
-            While GWO remains the best optimizer, dataset balancing significantly 
+            While ANN-GWO remains the best optimizer, dataset balancing significantly 
             improves classification accuracy for Mugilidae fishes.
             """)
 
