@@ -429,30 +429,70 @@ if models is not None:
         st.info(f"🎯 **Using Best Model: {best_method}** (Real Data Mode - {best_acc*100:.1f}% accuracy)")
     
     # ===============================
-    # MODEL SELECTION - FIXED!
+    # MODEL SELECTION - SIMPLIFIED & FIXED!
     # ===============================
     
-    # Create a clean mapping between display names and model keys
-    model_options = {
-        f"{best_method} (Recommended)": best_method.replace(' 🏆', ''),
-        "ANN": "ann",
-        "ANN-PSO": "pso",
-        "ANN-GA": "ga",
-        "ANN-GWO": "gwo"
-    }
+    # Define model keys and their display names
+    # IMPORTANT: These keys MUST match the keys in models dictionary
+    model_keys = ['ann', 'pso', 'ga', 'gwo']
+    model_display_names = ['ANN', 'ANN-PSO', 'ANN-GA', 'ANN-GWO']
     
-    # Ensure the recommended option is first
-    recommended_key = best_method.replace(' 🏆', '')
-    display_options = list(model_options.keys())
+    # Create a list of options for selectbox
+    # Put recommended model first
+    best_model_key = best_method.replace(' 🏆', '').lower()
     
-    model_choice_display = st.selectbox(
+    # Reorder: recommended first, then others
+    if best_model_key in model_keys:
+        ordered_keys = [best_model_key] + [k for k in model_keys if k != best_model_key]
+    else:
+        ordered_keys = model_keys
+    
+    # Create display options
+    display_options = []
+    for key in ordered_keys:
+        if key == best_model_key:
+            display_options.append(f"{key.upper()} 🏆 (Recommended)")
+        else:
+            display_options.append(key.upper())
+    
+    # Select model
+    selected_display = st.selectbox(
         "Select Model for Prediction",
         display_options,
-        index=0  # Default to recommended
+        index=0
     )
     
-    # Get the actual model key
-    model_key = model_options[model_choice_display]
+    # Extract the actual model key from display
+    # Remove any emoji and text in parentheses
+    selected_key = selected_display.split(' ')[0].lower()
+    
+    # Ensure it's a valid key
+    if selected_key not in model_keys:
+        selected_key = best_model_key
+    
+    # Get the model
+    selected_model = models[selected_key]
+    
+    # Get model name for display
+    model_name = selected_key.upper()
+    if selected_key == 'ann':
+        model_name = 'ANN'
+    elif selected_key == 'pso':
+        model_name = 'ANN-PSO'
+    elif selected_key == 'ga':
+        model_name = 'ANN-GA'
+    elif selected_key == 'gwo':
+        model_name = 'ANN-GWO'
+    
+    # Get accuracy for display
+    if model_name in results_df['Method'].str.replace(' 🏆', '').values:
+        row = results_df[results_df['Method'].str.replace(' 🏆', '') == model_name]
+        if not row.empty:
+            model_acc = row['Test Accuracy'].values[0]
+        else:
+            model_acc = "N/A"
+    else:
+        model_acc = "N/A"
     
     # ===============================
     # INPUT FEATURES
@@ -491,75 +531,42 @@ if models is not None:
     # ===============================
     
     if st.button("🔍 Predict Species", type="primary"):
-        # Build feature array
-        features = np.array([[nd1, nd2, np_val, nc, nv, na, sl, pl, bh, hl, 
-                              head, ant, mid, post, tail]])
-        
-        # Standardize
-        features_scaled = scaler.transform(features)
-        
-        # ===============================
-        # SELECT CORRECT MODEL - FIXED!
-        # ===============================
-        
-        # Map model_key to actual model object
-        model_mapping = {
-            'ann': models['ann'],
-            'pso': models['pso'],
-            'ga': models['ga'],
-            'gwo': models['gwo']
-        }
-        
-        model = model_mapping[model_key]
-        
-        # Get model name for display
-        if model_key == 'ann':
-            model_name = "ANN"
-        elif model_key == 'pso':
-            model_name = "ANN-PSO"
-        elif model_key == 'ga':
-            model_name = "ANN-GA"
-        else:
-            model_name = "ANN-GWO"
-        
-        # Get accuracy for display
-        if model_name == "ANN-GWO":
-            model_acc = f"{best_acc*100:.1f}%"
-        else:
-            # Find accuracy from results_df
-            row = results_df[results_df['Method'].str.contains(model_name)]
-            if not row.empty:
-                model_acc = row['Test Accuracy'].values[0]
-            else:
-                model_acc = "N/A"
-        
-        # ===============================
-        # PREDICT
-        # ===============================
-        
-        pred = model.predict(features_scaled)[0]
-        species = label_encoder.inverse_transform([pred])[0]
-        proba = model.predict_proba(features_scaled)[0]
-        confidence = max(proba) * 100
-        
-        # ===============================
-        # DISPLAY RESULTS
-        # ===============================
-        
-        st.markdown("---")
-        st.success(f"### 🎯 Predicted Species: **{species}**")
-        st.progress(int(confidence))
-        st.caption(f"Confidence: {confidence:.1f}%")
-        st.caption(f"📌 Model used: {model_name} ({model_acc} accuracy)")
-        st.caption(f"📊 Data Mode: {data_mode}")
-        
-        st.subheader("📊 Species Probabilities")
-        prob_df = pd.DataFrame({
-            'Species': label_encoder.classes_,
-            'Probability': proba
-        }).sort_values('Probability', ascending=False)
-        
-        st.bar_chart(prob_df.set_index('Species'))
+        try:
+            # Build feature array
+            features = np.array([[nd1, nd2, np_val, nc, nv, na, sl, pl, bh, hl, 
+                                  head, ant, mid, post, tail]])
+            
+            # Standardize
+            features_scaled = scaler.transform(features)
+            
+            # Predict using the selected model
+            pred = selected_model.predict(features_scaled)[0]
+            species = label_encoder.inverse_transform([pred])[0]
+            proba = selected_model.predict_proba(features_scaled)[0]
+            confidence = max(proba) * 100
+            
+            # ===============================
+            # DISPLAY RESULTS
+            # ===============================
+            
+            st.markdown("---")
+            st.success(f"### 🎯 Predicted Species: **{species}**")
+            st.progress(int(confidence))
+            st.caption(f"Confidence: {confidence:.1f}%")
+            st.caption(f"📌 Model used: {model_name} ({model_acc} accuracy)")
+            st.caption(f"📊 Data Mode: {data_mode}")
+            
+            st.subheader("📊 Species Probabilities")
+            prob_df = pd.DataFrame({
+                'Species': label_encoder.classes_,
+                'Probability': proba
+            }).sort_values('Probability', ascending=False)
+            
+            st.bar_chart(prob_df.set_index('Species'))
+            
+        except Exception as e:
+            st.error(f"Error during prediction: {e}")
+            st.info("Please check that all input values are valid numbers.")
     
     # ===============================
     # SUMMARY FOR THESIS
