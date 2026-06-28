@@ -418,7 +418,7 @@ if models is not None:
         st.caption("📌 **Observation:** Accuracy improves rapidly up to 200 samples per species (from 68.5% to 77.5%), after which gains diminish significantly (+0.5% from 200 to 300 samples).")
     
     # ===============================
-    # PREDICTION SECTION
+    # PREDICTION SECTION - FIXED!
     # ===============================
     
     st.header("🔮 Identify Fish Species")
@@ -428,11 +428,35 @@ if models is not None:
     else:
         st.info(f"🎯 **Using Best Model: {best_method}** (Real Data Mode - {best_acc*100:.1f}% accuracy)")
     
-    # Model selection
-    model_choice = st.selectbox(
+    # ===============================
+    # MODEL SELECTION - FIXED!
+    # ===============================
+    
+    # Create a clean mapping between display names and model keys
+    model_options = {
+        f"{best_method} (Recommended)": best_method.replace(' 🏆', ''),
+        "ANN": "ann",
+        "ANN-PSO": "pso",
+        "ANN-GA": "ga",
+        "ANN-GWO": "gwo"
+    }
+    
+    # Ensure the recommended option is first
+    recommended_key = best_method.replace(' 🏆', '')
+    display_options = list(model_options.keys())
+    
+    model_choice_display = st.selectbox(
         "Select Model for Prediction",
-        [f"{best_method} (Recommended - Best)", "ANN", "ANN-PSO", "ANN-GA"]
+        display_options,
+        index=0  # Default to recommended
     )
+    
+    # Get the actual model key
+    model_key = model_options[model_choice_display]
+    
+    # ===============================
+    # INPUT FEATURES
+    # ===============================
     
     st.markdown("### Enter 15 Morphometric Measurements")
     
@@ -462,47 +486,65 @@ if models is not None:
         post = st.number_input("Posterior_Truss", value=200.0, step=20.0, key="post")
         tail = st.number_input("Tail_Truss", value=100.0, step=10.0, key="tail")
     
+    # ===============================
+    # PREDICT BUTTON - FIXED!
+    # ===============================
+    
     if st.button("🔍 Predict Species", type="primary"):
+        # Build feature array
         features = np.array([[nd1, nd2, np_val, nc, nv, na, sl, pl, bh, hl, 
                               head, ant, mid, post, tail]])
+        
+        # Standardize
         features_scaled = scaler.transform(features)
         
-        if best_method in model_choice:
-            if best_method == "ANN-GWO 🏆":
-                model = models['gwo']
-                model_name = "ANN-GWO"
-            elif best_method == "ANN":
-                model = models['ann']
-                model_name = "ANN"
-            elif best_method == "ANN-PSO":
-                model = models['pso']
-                model_name = "ANN-PSO"
-            else:
-                model = models['ga']
-                model_name = "ANN-GA"
-        elif model_choice == "ANN":
-            model = models['ann']
+        # ===============================
+        # SELECT CORRECT MODEL - FIXED!
+        # ===============================
+        
+        # Map model_key to actual model object
+        model_mapping = {
+            'ann': models['ann'],
+            'pso': models['pso'],
+            'ga': models['ga'],
+            'gwo': models['gwo']
+        }
+        
+        model = model_mapping[model_key]
+        
+        # Get model name for display
+        if model_key == 'ann':
             model_name = "ANN"
-        elif model_choice == "ANN-PSO":
-            model = models['pso']
+        elif model_key == 'pso':
             model_name = "ANN-PSO"
-        else:
-            model = models['ga']
+        elif model_key == 'ga':
             model_name = "ANN-GA"
+        else:
+            model_name = "ANN-GWO"
+        
+        # Get accuracy for display
+        if model_name == "ANN-GWO":
+            model_acc = f"{best_acc*100:.1f}%"
+        else:
+            # Find accuracy from results_df
+            row = results_df[results_df['Method'].str.contains(model_name)]
+            if not row.empty:
+                model_acc = row['Test Accuracy'].values[0]
+            else:
+                model_acc = "N/A"
+        
+        # ===============================
+        # PREDICT
+        # ===============================
         
         pred = model.predict(features_scaled)[0]
         species = label_encoder.inverse_transform([pred])[0]
         proba = model.predict_proba(features_scaled)[0]
         confidence = max(proba) * 100
         
-        if model_name == "ANN-GWO":
-            model_acc = f"{best_acc*100:.1f}%"
-        elif model_name == "ANN":
-            model_acc = f"{results_df[results_df['Method']=='ANN']['Accuracy'].values[0]*100:.1f}%"
-        elif model_name == "ANN-PSO":
-            model_acc = f"{results_df[results_df['Method']=='ANN-PSO']['Accuracy'].values[0]*100:.1f}%"
-        else:
-            model_acc = f"{results_df[results_df['Method']=='ANN-GA']['Accuracy'].values[0]*100:.1f}%"
+        # ===============================
+        # DISPLAY RESULTS
+        # ===============================
         
         st.markdown("---")
         st.success(f"### 🎯 Predicted Species: **{species}**")
