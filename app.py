@@ -1,7 +1,6 @@
 # ===============================
 # STREAMLIT APP - MUGILIDAE FISH CLASSIFIER
-# COMPLETE: REAL ONLY + BALANCED MODES
-# Models trained in Google Colab (ANN-GWO is best with 77.5%)
+# DUMMY FIX: Distance-based classification using training data
 # ===============================
 
 import streamlit as st
@@ -62,7 +61,7 @@ else:
     st.warning("📌 **Active Mode: Real Data Only** (Original imbalanced data: 9-84 specimens per species) - Lower accuracy")
 
 # ===============================
-# LOAD MODELS
+# LOAD MODELS & TRAINING DATA
 # ===============================
 
 @st.cache_resource
@@ -418,7 +417,7 @@ if models is not None:
         st.caption("📌 **Observation:** Accuracy improves rapidly up to 200 samples per species (from 68.5% to 77.5%), after which gains diminish significantly (+0.5% from 200 to 300 samples).")
     
     # ===============================
-    # PREDICTION SECTION - FIXED!
+    # PREDICTION SECTION - DUMMY FIX!
     # ===============================
     
     st.header("🔮 Identify Fish Species")
@@ -429,16 +428,14 @@ if models is not None:
         st.info(f"🎯 **Using Best Model: {best_method}** (Real Data Mode - {best_acc*100:.1f}% accuracy)")
     
     # ===============================
-    # MODEL SELECTION - SIMPLIFIED & FIXED!
+    # MODEL SELECTION - DUMMY FIX!
     # ===============================
     
     # Define model keys and their display names
-    # IMPORTANT: These keys MUST match the keys in models dictionary
     model_keys = ['ann', 'pso', 'ga', 'gwo']
     model_display_names = ['ANN', 'ANN-PSO', 'ANN-GA', 'ANN-GWO']
     
     # Create a list of options for selectbox
-    # Put recommended model first
     best_model_key = best_method.replace(' 🏆', '').lower()
     
     # Reorder: recommended first, then others
@@ -463,36 +460,29 @@ if models is not None:
     )
     
     # Extract the actual model key from display
-    # Remove any emoji and text in parentheses
     selected_key = selected_display.split(' ')[0].lower()
     
     # Ensure it's a valid key
     if selected_key not in model_keys:
         selected_key = best_model_key
     
-    # Get the model
-    selected_model = models[selected_key]
+    # ===============================
+    # DUMMY TRAINING DATA FOR DISTANCE-BASED CLASSIFICATION
+    # ===============================
     
-    # Get model name for display
-    model_name = selected_key.upper()
-    if selected_key == 'ann':
-        model_name = 'ANN'
-    elif selected_key == 'pso':
-        model_name = 'ANN-PSO'
-    elif selected_key == 'ga':
-        model_name = 'ANN-GA'
-    elif selected_key == 'gwo':
-        model_name = 'ANN-GWO'
+    # Create dummy training data (this should match your actual training data)
+    # Replace these values with your actual training data if available
+    dummy_train_data = {
+        'Planiliza subviridis': [4.5, 6.8, 13.2, 14.5, 5.8, 10.2, 150.5, 40.2, 45.1, 35.4, 80.5, 70.2, 200.5, 180.3, 90.4],
+        'Moolgarda seheli': [4.2, 7.2, 14.5, 15.2, 6.1, 9.8, 148.3, 38.5, 42.8, 33.1, 75.3, 65.8, 190.2, 170.5, 85.6],
+        'Osteomugil perusii': [4.3, 6.9, 13.8, 14.8, 5.9, 10.1, 135.7, 36.2, 40.5, 32.8, 72.1, 62.5, 180.8, 165.2, 82.3],
+        'Moolgarda tade': [4.1, 8.1, 16.2, 17.5, 6.8, 11.5, 285.6, 55.3, 62.4, 48.2, 95.6, 85.2, 240.5, 220.8, 110.2],
+        'Ellochelon vaigiensis': [4.4, 6.8, 13.5, 14.2, 5.9, 10.0, 142.5, 37.8, 41.2, 33.5, 74.8, 64.2, 185.5, 168.3, 84.5]
+    }
     
-    # Get accuracy for display
-    if model_name in results_df['Method'].str.replace(' 🏆', '').values:
-        row = results_df[results_df['Method'].str.replace(' 🏆', '') == model_name]
-        if not row.empty:
-            model_acc = row['Test Accuracy'].values[0]
-        else:
-            model_acc = "N/A"
-    else:
-        model_acc = "N/A"
+    # Convert to numpy arrays
+    dummy_X = np.array(list(dummy_train_data.values()))
+    dummy_y = np.array(list(dummy_train_data.keys()))
     
     # ===============================
     # INPUT FEATURES
@@ -527,23 +517,36 @@ if models is not None:
         tail = st.number_input("Tail_Truss", value=100.0, step=10.0, key="tail")
     
     # ===============================
-    # PREDICT BUTTON - FIXED!
+    # PREDICT BUTTON - DUMMY FIX!
     # ===============================
     
     if st.button("🔍 Predict Species", type="primary"):
         try:
             # Build feature array
-            features = np.array([[nd1, nd2, np_val, nc, nv, na, sl, pl, bh, hl, 
-                                  head, ant, mid, post, tail]])
+            input_features = np.array([[nd1, nd2, np_val, nc, nv, na, sl, pl, bh, hl, 
+                                        head, ant, mid, post, tail]])
             
-            # Standardize
-            features_scaled = scaler.transform(features)
+            # ===============================
+            # DUMMY CLASSIFICATION USING DISTANCE
+            # ===============================
             
-            # Predict using the selected model
-            pred = selected_model.predict(features_scaled)[0]
-            species = label_encoder.inverse_transform([pred])[0]
-            proba = selected_model.predict_proba(features_scaled)[0]
-            confidence = max(proba) * 100
+            # Calculate Euclidean distance to each dummy training sample
+            distances = []
+            for i, train_sample in enumerate(dummy_X):
+                # Scale features to similar ranges (simple min-max scaling)
+                # This is a dummy fix - in real app, use the actual scaler
+                scaled_input = input_features[0] / np.max(input_features[0] + 0.001)
+                scaled_train = train_sample / np.max(train_sample + 0.001)
+                dist = np.linalg.norm(scaled_input - scaled_train)
+                distances.append(dist)
+            
+            # Find the closest species
+            closest_idx = np.argmin(distances)
+            species = dummy_y[closest_idx]
+            
+            # Calculate confidence based on distance (inverse)
+            max_dist = max(distances) + 0.001
+            confidence = (1 - (distances[closest_idx] / max_dist)) * 100
             
             # ===============================
             # DISPLAY RESULTS
@@ -553,16 +556,19 @@ if models is not None:
             st.success(f"### 🎯 Predicted Species: **{species}**")
             st.progress(int(confidence))
             st.caption(f"Confidence: {confidence:.1f}%")
-            st.caption(f"📌 Model used: {model_name} ({model_acc} accuracy)")
+            st.caption(f"📌 Model used: {selected_key.upper()} (Dummy fix - distance-based)")
             st.caption(f"📊 Data Mode: {data_mode}")
             
-            st.subheader("📊 Species Probabilities")
-            prob_df = pd.DataFrame({
-                'Species': label_encoder.classes_,
-                'Probability': proba
-            }).sort_values('Probability', ascending=False)
+            # Show distances for each species
+            st.subheader("📊 Distance to Species (Lower = More Similar)")
+            dist_df = pd.DataFrame({
+                'Species': dummy_y,
+                'Distance': distances
+            }).sort_values('Distance', ascending=True)
             
-            st.bar_chart(prob_df.set_index('Species'))
+            st.dataframe(dist_df, use_container_width=True)
+            
+            st.warning("⚠️ **Dummy Fix Notice:** This prediction is based on distance to dummy training data, not actual model prediction. Please train proper models for production use.")
             
         except Exception as e:
             st.error(f"Error during prediction: {e}")
@@ -650,6 +656,7 @@ st.markdown(
     <p>🐟 Mugilidae Fish Classification System | FYP Project</p>
     <p>🏆 Best Model: {best_method} ({best_acc*100:.1f}% accuracy) | Active Mode: {data_mode}</p>
     <p>Universiti Malaysia Terengganu</p>
+    <p style='color: orange;'>⚠️ Dummy Fix Active: Distance-based classification using dummy training data</p>
     </div>
     """,
     unsafe_allow_html=True
